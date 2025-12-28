@@ -1,281 +1,115 @@
 // onclick of any button that button should be reflected in the input box.
-let button_clicked = document.getElementById("second-sub-container");
-let input_box = document.getElementById("display");
-let input_value = "";
-let button_operator = null;
-let firstOperand = "";
-let secondOperand = "";
-
-        function equate(firstOperand, secondOperand, button_operator){
-                    if (button_operator == '+'){
-                        return Number(firstOperand) + Number(secondOperand);
-                    }
-                    else if (button_operator == '-'){
-                        return Number(firstOperand) - Number(secondOperand);
-                    }
-                    else if (button_operator == '*'){
-                        return Number(firstOperand) * Number(secondOperand);
-
-                    }
-                    else if (button_operator == '/'){
-                        return Number(firstOperand) / Number(secondOperand);
-
-                    }
-                    else if (button_operator == '^'){
-                        return Number(firstOperand) ** Number(secondOperand);
-
-                    }
-                    else if (button_operator == '%'){
-                        return Number(firstOperand) % Number(secondOperand);
-
-                    }
-                    else if (button_operator == '!='){
-                        if (Number(firstOperand) != Number(secondOperand)){
-                            return true;
-                        }
-                        else {
-                            return false};
-                         
-
-                    }
-                    else if (button_operator == '>'){
-                        if (Number(firstOperand) > Number(secondOperand)){
-                            return true;
-                        }
-                        else return false;
-
-                    }
-                    else if (button_operator == '<'){
-                        if (Number(firstOperand) < Number(secondOperand)){
-                            return true;
-                        }
-                        else return false;
-
-                    }
-                    else if (button_operator == '>='){
-                        if (Number(firstOperand) > Number(secondOperand) || Number(firstOperand) == Number(secondOperand)){
-                            return true;
-                        }
-                        else return false;
-
-                    }
-                    else if (button_operator == '<='){
-                        if (Number(firstOperand) < Number(secondOperand) || Number(firstOperand) == Number(secondOperand)){
-                            return true;
-                        }
-                        else return false;
-
-                    }
-                    else if (button_operator == 'AND'){
-                        return Number(firstOperand) & Number(secondOperand);
-                    }
-                    else if (button_operator == 'OR'){
-                        return Number(firstOperand) | Number(secondOperand);
-                    }
-                    else if (button_operator == 'NOT'){
-                        return ~Number(firstOperand);
-                    }
-
-                    // else if (button_operator == 'DEL'){
-                    //     return Number(firstOperand) & Number(secondOperand);
-                    // }
-                    
-                    
+let button_clicked = document.getElementById("buttons-container");
+let input_box = document.getElementById("input");
 
 
-                    
-                }
-button_clicked.addEventListener('click', function(e){
 
-    if (e.target.tagName != "BUTTON") return;
-    // console.log(e);
-    let single_input = e.target.textContent;
-    if (single_input != "DEL"){
-        input_value += single_input;
+//refactor code
+//creating state instead of mutating globles 
+const state = {
+    input_value : "",
+    operator : null,
+    firstOperand : "",
+    secondOperand : "",
+    justEvaluated : false
+
+}
+
+const operators = {
+    "+" : (a,b) => a + b,
+    "-" : (a,b) => a - b,
+    "*" : (a,b) => a * b,
+    "/" : (a,b) => a/b,
+    "^" : (a,b) => a ** b,
+    "%" : (a,b) => a % b,
+    ">" : (a,b) => a > b,
+    "<" : (a,b) => a < b,
+    ">=": (a,b) => a >= b,
+    "<=": (a,b) => a <= b,
+    "OR": (a,b) => a | b,
+    "AND": (a,b) => a & b,
+    "NOT": (a) => ~a,
+    "!=" : (a,b) => a != b
+
+}
+//this function takes state and returns computed result by selecting an operator
+function calculate(state){
+    const {operator, firstOperand, secondOperand} = state;
+
+    if (!operator) return firstOperand;
+
+    const operation = operators[operator];
+    return operator == "NOT" ? operation(Number(firstOperand)) : operation(Number(firstOperand), Number(secondOperand));
+
+
+}
+
+
+button_clicked.addEventListener('click', (e) =>{
+    const button_ = e.target.closest("button");
+    if (!button_) return ;
+    const {type, value} = button_.dataset;
+    if (type === "number"){
+        handleNumber(value);
     }
-    
-    console.log("latest input",input_value);
-    input_box.value =  input_value;
-    console.log("got clicked.....................", e.target.textContent);
+    if (type === "operator"){
+        handleOperator(value);
+    }
+    if (type === "action" && value === 'CC'){
+        handleAction(value);
+    }
+    if (type === "action" && value === '=' || type === "action" && value === 'Enter'){
+        handleAction(value);
+    }
+    if (type === "action" && value === 'DEL'){
+        handleAction(value);
+    }
 
-    let justEvaluated = false;
+    input_box.value = state.input_value;
+});
 
-    // functionality for display
-    if (single_input >= "0" && single_input <= "9"){
-        console.log("its a number...", single_input);
-        
-        if (button_operator == null){
-            firstOperand += single_input;
-            // firstOperand += e.target.textContent;
-            console.log("this is the first one",firstOperand);
+// operator function
+function handleOperator(op){
+    if (state.firstOperand === "") return;
+    state.operator = op;
+    state.input_value += op;
+}
 
-        }
-        else{
-            //working for second operand
-            secondOperand += single_input;
-            console.log("this is the second one", secondOperand);
-        }
-
-
+//number function
+function handleNumber(digit){
+    if (state.operator === null){
+        state.firstOperand += digit;
     }
     else{
-        console.log("no no not a number");
+        state.secondOperand += digit;
+    }
+
+    state.input_value += digit;
+}
+
+//action function
+function handleAction(value){
+    if (value === 'CC'){
+    state.input_value = "",
+    state.operator = null,
+    state.firstOperand = "",
+    state.secondOperand = ""
+    }
+
+    if (value === 'DEL'){
+        state.input_value = state.input_value.slice(0, -1);
+    }
+    if (value === '=' || value === 'Enter'){
+        if (state.input_value === null) return;
+
+        const result = calculate(state);
+        state.input_value = String(result);
+        state.firstOperand = result;
+        state.secondOperand = "";
+        state.operator = null;
+        state.justEvaluated = true;
 
 
+    }
+}
 
-        if (single_input == '+'){
-                console.log("we are adding!!!");
-                button_operator = '+';
-                secondOperand = "";
-
-            }
-        else if (single_input == '-'){
-                console.log("we are suntracting!!!");
-                button_operator = '-';
-                secondOperand = "";
-
-                }
-        else if (single_input == '*'){
-                    console.log("we are multilying!!!");
-                    button_operator = '*';
-                    secondOperand = "";
-                }
-        else if (single_input == '/'){
-                    console.log("we are dividing!!!");
-                    button_operator = '/';
-                    secondOperand = "";
-                }
-        else if (single_input == '^'){
-                    console.log("we are exponenting!!!");
-                    button_operator = '^';
-                    secondOperand = "";
-                }
-        else if (single_input == '%'){
-                    console.log("we are finding modulos!!!");
-                    button_operator = '%';
-                    secondOperand = "";
-                }
-        else if (single_input == '!='){
-                    console.log("we are finding inequality!!!");
-                    button_operator = '!=';
-                    secondOperand = "";
-                }
-                else if (single_input == '>'){
-                    console.log("we are findong greator one!!!");
-                    button_operator = '>';
-                    secondOperand = "";
-                }
-                else if (single_input == '<'){
-                    console.log("we are finding lesser one!!!");
-                    button_operator = '<';
-                    secondOperand = "";
-                }
-                else if (single_input == '>='){
-                    console.log("we are finding greator than or equal to!!!");
-                    button_operator = '>=';
-                    secondOperand = "";
-                }
-                else if (single_input == '<='){
-                    console.log("we are finding less than or equal to!!!");
-                    button_operator = '<=';
-                    secondOperand = "";
-                }
-                else if (single_input == 'AND'){
-                    console.log("we are finding bitwise AND");
-                    button_operator = 'AND';
-                    secondOperand = "";
-                }
-                else if (single_input == 'OR'){
-                    console.log("we are finding bitwise OR!!!");
-                    button_operator = 'OR';
-                    secondOperand = "";
-                }
-                else if (single_input == 'NOT'){
-                    console.log("we are finding bitwise NOT!!!");
-                    button_operator = 'NOT';
-                    secondOperand = "";
-                }
-                else if (single_input == 'CC'){
-                    console.log("we are resetting!!!");
-                    button_operator = null;
-                    firstOperand = "";
-                    secondOperand = "";
-                    input_value = "";
-                    input_box.value = "";
-                }
-                else if (single_input == 'DEL'){
-                    // console.log("......",input_box.textContent, single_input, e.target.textContent, input_value);
-                    if (button_operator == "AND"){
-                        button_operator = null;
-                        input_value = firstOperand;
-                        console.log("here is the value after DEL on operatir", input_value);
-                        input_box.value = input_value;
-                        console.log("here is the final result after DEL", input_value)
-                    }
-                    else if (button_operator == "OR") {
-                        button_operator = null;
-                        input_value = firstOperand;
-                        input_box.value = input_value;
-
-                    }
-                    else if (button_operator == "NOT") {
-                        button_operator = null;
-                        input_value = firstOperand;
-                        input_box.value = input_value;
-
-                    }
-                    else if (button_operator == ">=") {
-                        button_operator = null;
-                        input_value = firstOperand;
-                        input_box.value = input_value;
-
-                    }
-                    else if (button_operator == "<=") {
-                        button_operator = null;
-                        input_value = firstOperand;
-                        input_box.value = input_value;
-
-                    }
-                    else if (button_operator == "!=") {
-                        button_operator = null;
-                        input_value = firstOperand;
-                        input_box.value = input_value;
-
-                    }
-                    
-                    else{
-                        input_value = input_value.slice(0, -1);
-                    input_box.value = input_value;
-                    console.log("checking for updated deledted vaslyue",input_value);
-                    secondOperand = "";
-                    }
-                    
-
-                    console.log("we are deleting!!!");
-
-                }
-
-        else if(single_input == '=' || single_input == 'Enter'){
-                
-                console.log("we are equating!!!");
-                let result = equate(firstOperand, secondOperand, button_operator);
-                console.log("final answer: ",result);
-                input_box.value = result;
-                firstOperand = result;
-                secondOperand = "";
-                input_value = "";
-                // input_box.value = "";
-                // result = "";
-                
-                console.log("check answer: ",firstOperand, secondOperand, input_value);
-
-                
-
-            }
-
-            }
-    
-
-
-});
-module.exports = {equate};
